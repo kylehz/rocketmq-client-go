@@ -19,6 +19,7 @@ package admin
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -154,6 +155,32 @@ func (a *admin) FetchAllTopicList(ctx context.Context) (*TopicList, error) {
 	return &topicList, nil
 }
 
+func (a *admin) QueryTopicConsumeByWho(ctx context.Context, brokerAddr string, topic string, timeoutMillis time.Duration) (*GroupList, error) {
+	header := &internal.QueryTopicConsumeByWhoRequestHeader{
+		Topic: topic,
+	}
+	cmd := remote.NewRemotingCommand(internal.ReqQueryTopicConsumeByWho, header, nil)
+	a.cli.RegisterACL()
+	response, err := a.cli.InvokeSync(ctx, brokerAddr, cmd, timeoutMillis)
+	if err != nil {
+		rlog.Error("Fetch all group list error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	} else {
+		rlog.Info("Fetch all group list success", map[string]interface{}{})
+	}
+	var groupList GroupList
+	_, err = groupList.Decode(response.Body, &groupList)
+	if err != nil {
+		rlog.Error("Fetch all group list decode error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	}
+	return &groupList, nil
+}
+
 // CreateTopic create topic.
 // TODO: another implementation like sarama, without brokerAddr as input
 func (a *admin) CreateTopic(ctx context.Context, opts ...OptionCreate) error {
@@ -265,6 +292,60 @@ func (a *admin) DeleteTopic(ctx context.Context, opts ...OptionDelete) error {
 
 func (a *admin) FetchPublishMessageQueues(ctx context.Context, topic string) ([]*primitive.MessageQueue, error) {
 	return a.cli.GetNameSrv().FetchPublishMessageQueues(utils.WrapNamespace(a.opts.Namespace, topic))
+}
+
+func (a *admin) ExamineConsumeStats(ctx context.Context, brokerAddr string, consumerGroup string, topic string, timeoutMillis time.Duration) (*ConsumeStats, error) {
+	request := &internal.GetConsumeStatsRequestHeader{
+		ConsumerGroup: consumerGroup,
+		Topic:         topic,
+	}
+	cmd := remote.NewRemotingCommand(internal.ReqGetConsumeStats, request, nil)
+	a.cli.RegisterACL()
+	response, err := a.cli.InvokeSync(ctx, brokerAddr, cmd, timeoutMillis)
+	if err != nil {
+		rlog.Error("Fetch all comsume stat error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	} else {
+		rlog.Info("Fetch all comsume stat success", map[string]interface{}{})
+	}
+	var consumeStats ConsumeStats
+	_, err = consumeStats.Decode(response.Body, &consumeStats)
+	if err != nil {
+		rlog.Error("Fetch all comsume stat decode error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	}
+	for k, v := range consumeStats.OffsetTable {
+		_ = json.Unmarshal([]byte(k), &v.Meta)
+		consumeStats.OffsetTable[k] = v
+	}
+	return &consumeStats, nil
+}
+
+func (a *admin) ExamineBrokerClusterInfo(ctx context.Context, timeoutMillis time.Duration) (*ClusterInfo, error) {
+	cmd := remote.NewRemotingCommand(internal.ReqGetBrokerClusterInfo, nil, nil)
+	// a.cli.RegisterACL()
+	response, err := a.cli.InvokeSync(ctx, a.cli.GetNameSrv().AddrList()[0], cmd, timeoutMillis)
+	if err != nil {
+		rlog.Error("Fetch cluster info error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	} else {
+		rlog.Info("Fetch cluster info success", map[string]interface{}{})
+	}
+	var clusterInfo ClusterInfo
+	_, err = clusterInfo.Decode(response.Body, &clusterInfo)
+	if err != nil {
+		rlog.Error("Fetch cluster info decode error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	}
+	return &clusterInfo, nil
 }
 
 func (a *admin) Close() error {

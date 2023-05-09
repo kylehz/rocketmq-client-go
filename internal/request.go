@@ -47,9 +47,11 @@ const (
 	ReqNotifyConsumerIdsChanged      = int16(40)
 	ReqGetAllSubscriptionGroupConfig = int16(201)
 	ReqGetAllTopicListFromNameServer = int16(206)
+	ReqGetConsumeStats               = int16(208)
 	ReqDeleteTopicInBroker           = int16(215)
 	ReqDeleteTopicInNameSrv          = int16(216)
 	ReqResetConsumerOffset           = int16(220)
+	ReqQueryTopicConsumeByWho        = int16(300)
 	ReqGetConsumerRunningInfo        = int16(307)
 	ReqConsumeMessageDirectly        = int16(309)
 	ReqSendReplyMessage              = int16(324)
@@ -583,4 +585,26 @@ func (request *ReplyMessageRequestHeader) Decode(properties map[string]string) {
 	if v, existed := properties["storeTimestamp"]; existed {
 		request.storeTimestamp, _ = strconv.ParseInt(v, 10, 0)
 	}
+}
+
+type GetConsumeStatsRequestHeader struct {
+	ConsumerGroup string
+	Topic         string
+}
+
+func (request *GetConsumeStatsRequestHeader) Encode() map[string]string {
+	maps := make(map[string]string)
+	maps["consumerGroup"] = request.ConsumerGroup
+	maps["topic"] = request.Topic
+	return maps
+}
+
+type QueryTopicConsumeByWhoRequestHeader struct {
+	Topic string
+}
+
+func (request *QueryTopicConsumeByWhoRequestHeader) Encode() map[string]string {
+	maps := make(map[string]string)
+	maps["topic"] = request.Topic
+	return maps
 }
