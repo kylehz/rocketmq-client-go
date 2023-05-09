@@ -348,6 +348,32 @@ func (a *admin) ExamineBrokerClusterInfo(ctx context.Context, timeoutMillis time
 	return &clusterInfo, nil
 }
 
+func (a *admin) GetTopicRouteInfo(ctx context.Context, topic string, timeoutMillis time.Duration) (*TopicRouteData, error) {
+	header := &internal.GetRouteInfoRequestHeader{
+		Topic: topic,
+	}
+	cmd := remote.NewRemotingCommand(internal.ReqGetRouteInfoByTopic, header, nil)
+	a.cli.RegisterACL()
+	response, err := a.cli.InvokeSync(ctx, a.cli.GetNameSrv().AddrList()[0], cmd, timeoutMillis)
+	if err != nil {
+		rlog.Error("Fetch all group list error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	} else {
+		rlog.Info("Fetch all group list success", map[string]interface{}{})
+	}
+	var topicRouteData TopicRouteData
+	_, err = topicRouteData.Decode(response.Body, &topicRouteData)
+	if err != nil {
+		rlog.Error("Fetch all group list decode error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	}
+	return &topicRouteData, nil
+}
+
 func (a *admin) Close() error {
 	a.closeOnce.Do(func() {
 		a.cli.Shutdown()

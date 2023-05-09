@@ -155,3 +155,33 @@ type ClusterInfo struct {
 	ClusterAddrTable map[string][]string `json:"clusterAddrTable"`
 	RemotingSerializable
 }
+
+type BrokerData struct {
+	Cluster     string           `json:"cluster"`
+	BrokerName  string           `json:"brokerName"`
+	BrokerAddrs map[int64]string `json:"brokerAddrs"`
+}
+
+func (b *BrokerData) SelectBrokerAddr() string {
+	if addr, ok := b.BrokerAddrs[0]; ok {
+		return addr
+	}
+	for _, addr := range b.BrokerAddrs {
+		return addr
+	}
+	return ""
+}
+
+type TopicRouteData struct {
+	OrderTopicConf string `json:"orderTopicConf"`
+	QueueDatas     []struct {
+		BrokerName     string `json:"brokerName"`
+		ReadQueueNums  int    `json:"readQueueNums"`
+		WriteQueueNums int    `json:"writeQueueNums"`
+		Perm           int    `json:"perm"`
+		TopicSysFlag   int    `json:"topicSysFlag"`
+	} `json:"queueDatas"`
+	BrokerDatas       []BrokerData        `json:"brokerDatas"`
+	FilterServerTable map[string][]string `json:"filterServerTable"`
+	RemotingSerializable
+}
