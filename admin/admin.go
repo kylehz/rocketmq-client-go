@@ -120,7 +120,7 @@ func (a *admin) GetAllSubscriptionGroup(ctx context.Context, brokerAddr string, 
 		})
 		return nil, err
 	} else {
-		rlog.Info("Get all group list success", map[string]interface{}{})
+		// rlog.Info("Get all group list success", map[string]interface{}{})
 	}
 	var subscriptionGroupWrapper SubscriptionGroupWrapper
 	_, err = subscriptionGroupWrapper.Decode(response.Body, &subscriptionGroupWrapper)
@@ -142,7 +142,7 @@ func (a *admin) FetchAllTopicList(ctx context.Context) (*TopicList, error) {
 		})
 		return nil, err
 	} else {
-		rlog.Info("Fetch all topic list success", map[string]interface{}{})
+		// rlog.Info("Fetch all topic list success", map[string]interface{}{})
 	}
 	var topicList TopicList
 	_, err = topicList.Decode(response.Body, &topicList)
@@ -168,7 +168,7 @@ func (a *admin) QueryTopicConsumeByWho(ctx context.Context, brokerAddr string, t
 		})
 		return nil, err
 	} else {
-		rlog.Info("Fetch all group list success", map[string]interface{}{})
+		// rlog.Info("Fetch all group list success", map[string]interface{}{})
 	}
 	var groupList GroupList
 	_, err = groupList.Decode(response.Body, &groupList)
@@ -308,7 +308,7 @@ func (a *admin) ExamineConsumeStats(ctx context.Context, brokerAddr string, cons
 		})
 		return nil, err
 	} else {
-		rlog.Info("Fetch all comsume stat success", map[string]interface{}{})
+		// rlog.Info("Fetch all comsume stat success", map[string]interface{}{})
 	}
 	var consumeStats ConsumeStats
 	_, err = consumeStats.Decode(response.Body, &consumeStats)

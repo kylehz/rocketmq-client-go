@@ -19,7 +19,6 @@ package admin
 
 import (
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -67,7 +66,6 @@ func replaceJavaJsonToGo(str string) string {
 		return repl
 	})
 	str = javaJsonRegexp2.ReplaceAllStringFunc(str, func(repl string) string {
-		fmt.Println(repl)
 		replacer := strings.NewReplacer(`{`, `{"`, `,`, `,"`, `:`, `":`)
 		repl = replacer.Replace(repl)
 		return repl
