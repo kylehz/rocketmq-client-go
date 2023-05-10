@@ -361,7 +361,7 @@ func (a *admin) GetTopicRouteInfo(ctx context.Context, topic string, timeoutMill
 		})
 		return nil, err
 	} else {
-		rlog.Info("Fetch all group list success", map[string]interface{}{})
+		// rlog.Info("Fetch all group list success", map[string]interface{}{})
 	}
 	var topicRouteData TopicRouteData
 	_, err = topicRouteData.Decode(response.Body, &topicRouteData)
