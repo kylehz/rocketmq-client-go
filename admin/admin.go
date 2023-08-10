@@ -374,6 +374,28 @@ func (a *admin) GetTopicRouteInfo(ctx context.Context, topic string, timeoutMill
 	return &topicRouteData, nil
 }
 
+func (a *admin) GetBrokerRuntimeStats(ctx context.Context, brokerAddr string, timeoutMillis time.Duration) (map[string]string, error) {
+	cmd := remote.NewRemotingCommand(internal.ReqBrokerRuntimeStats, nil, nil)
+	response, err := a.cli.InvokeSync(ctx, brokerAddr, cmd, timeoutMillis)
+	if err != nil {
+		rlog.Error("get broker runtimestats error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	} else {
+		// rlog.Info("get broker runtimestats success", map[string]interface{}{})
+	}
+	var brokerRuntimeStatsBind BrokerRuntimeStatsBind
+	_, err = brokerRuntimeStatsBind.Decode(response.Body, &brokerRuntimeStatsBind)
+	if err != nil {
+		rlog.Error("get broker runtimestats decode error", map[string]interface{}{
+			rlog.LogKeyUnderlayError: err,
+		})
+		return nil, err
+	}
+	return brokerRuntimeStatsBind.Table, nil
+}
+
 func (a *admin) Close() error {
 	a.closeOnce.Do(func() {
 		a.cli.Shutdown()

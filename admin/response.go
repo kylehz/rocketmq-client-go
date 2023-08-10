@@ -51,27 +51,28 @@ func (r *RemotingSerializable) ToJson(obj interface{}, prettyFormat bool) string
 }
 
 /*
-	转换Java非标Json
+转换Java非标Json
 
 ExamineBrokerClusterInfo: {"brokerAddrTable":{"broker-a":{"brokerAddrs":{0:"192.168.1.111:10911"},"brokerName":"broker-a","cluster":"DefaultCluster"}},"clusterAddrTable":{"DefaultCluster":["broker-a"]}}
 ExamineConsumeStats: {"consumeTps":0.0,"offsetTable":{{"brokerName":"broker-a","queueId":7,"topic":"topic_test"}:{"brokerOffset":0,"consumerOffset":0,"lastTimestamp":0},{"brokerName":"broker-a","queueId":6,"topic":"topic_test"}:{"brokerOffset":0,"consumerOffset":0,"lastTimestamp":0},{"brokerName":"broker-a","queueId":3,"topic":"topic_test"}:{"brokerOffset":0,"consumerOffset":0,"lastTimestamp":0},{"brokerName":"broker-a","queueId":2,"topic":"topic_test"}:{"brokerOffset":0,"consumerOffset":0,"lastTimestamp":0},{"brokerName":"broker-a","queueId":5,"topic":"topic_test"}:{"brokerOffset":0,"consumerOffset":0,"lastTimestamp":0},{"brokerName":"broker-a","queueId":4,"topic":"topic_test"}:{"brokerOffset":0,"consumerOffset":0,"lastTimestamp":0},{"brokerName":"broker-a","queueId":1,"topic":"topic_test"}:{"brokerOffset":0,"consumerOffset":0,"lastTimestamp":0},{"brokerName":"broker-a","queueId":0,"topic":"topic_test"}:{"brokerOffset":0,"consumerOffset":0,"lastTimestamp":0}}}
 */
 var javaJsonRegexp1 = regexp.MustCompile(`[{,]{.*?}:`)
 var javaJsonRegexp2 = regexp.MustCompile(`[{,]\d*?:`)
+var replacer1 = strings.NewReplacer(`{{`, `{"{`, `,{`, `,"{`, `}:`, `}":`, `"`, `\"`)
+var replacer2 = strings.NewReplacer(`{`, `{"`, `,`, `,"`, `:`, `":`)
 
 func replaceJavaJsonToGo(str string) string {
 	str = javaJsonRegexp1.ReplaceAllStringFunc(str, func(repl string) string {
-		replacer := strings.NewReplacer(`{{`, `{"{`, `,{`, `,"{`, `}:`, `}":`, `"`, `\"`)
-		repl = replacer.Replace(repl)
+		repl = replacer1.Replace(repl)
 		return repl
 	})
 	str = javaJsonRegexp2.ReplaceAllStringFunc(str, func(repl string) string {
-		replacer := strings.NewReplacer(`{`, `{"`, `,`, `,"`, `:`, `":`)
-		repl = replacer.Replace(repl)
+		repl = replacer2.Replace(repl)
 		return repl
 	})
 	return str
 }
+
 func (r *RemotingSerializable) Decode(data []byte, classOfT interface{}) (interface{}, error) {
 	jsonStr := string(data)
 	jsonStr = replaceJavaJsonToGo(jsonStr)
@@ -181,5 +182,10 @@ type TopicRouteData struct {
 	} `json:"queueDatas"`
 	BrokerDatas       []BrokerData        `json:"brokerDatas"`
 	FilterServerTable map[string][]string `json:"filterServerTable"`
+	RemotingSerializable
+}
+
+type BrokerRuntimeStatsBind struct {
+	Table map[string]string `json:"table"`
 	RemotingSerializable
 }
