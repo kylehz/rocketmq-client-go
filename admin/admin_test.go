@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -66,5 +67,28 @@ func TestExamineFetchAllTopicList(t *testing.T) {
 			return
 		}
 		t.Logf("ExamineFetchAllTopicList: %#v", resp)
+	})
+}
+
+func TestExamineConsumeStats1(t *testing.T) {
+	nameSrvAddr := []string{"127.0.0.1:9876"}
+	brokerAddr := "192.168.23.185:10911"
+	consumerGroup := "docs_createDocFlowGroup"
+	topic := "signsAfterCreateProcessTopic"
+	t.Run("ExamineConsumeStats", func(t *testing.T) {
+		mqAdmin, err := NewAdmin(
+			WithResolver(primitive.NewPassthroughResolver(nameSrvAddr)),
+		)
+		if err != nil {
+			t.Error(err.Error())
+			return
+		}
+		resp, err := mqAdmin.ExamineConsumeStats(context.Background(), brokerAddr, consumerGroup, topic, 3*time.Second)
+		if err != nil {
+			t.Error(err.Error())
+			return
+		}
+		by, _ := json.Marshal(resp)
+		t.Logf("ExamineConsumeStats: %s", string(by))
 	})
 }
